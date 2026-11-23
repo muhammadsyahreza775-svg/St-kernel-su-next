@@ -53,10 +53,11 @@ jobs:
           sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
           sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
           sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
-          
+             
       - name: Fix unknown warning option in Makefile
         run: |
           find kernel -type f -exec sed -i 's/-Wno-cast-function-type-strict//g' {} +
+          find kernel/arch/arm64/configs -type f -exec sed -i 's/CONFIG_COMPAT_VDSO=y/# CONFIG_COMPAT_VDSO is not set/g' {} +
 
 
       - name: Konfigurasi & Kompilasi Kernel
