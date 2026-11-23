@@ -31,10 +31,11 @@ jobs:
       - name: Unduh ZyC Clang Toolchain
         run: |
           mkdir -p clang && cd clang
-          CLANG_URL=$(curl -s https://github.com | grep "browser_download_url" | grep -E "\.tar\.(zst|gz|xz)\"" | head -n 1 | cut -d '"' -f 4)
+          CLANG_URL=$(curl -sL https://githubusercontent.com | head -n 1 | tr -d '\r')
           echo "Downloading: $CLANG_URL"
           wget -q "$CLANG_URL" -O clang_archive
           tar -xf clang_archive && rm -f clang_archive
+
 
 
       - name: Unduh Source SouthWest-NG v0.21.0
