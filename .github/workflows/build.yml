@@ -1,1 +1,104 @@
+name: Build SouthWest-NG 0.21.0 KSUN
 
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: 'Pilih Varian (standar / legacy)'
+        required: true
+        default: 'standar'
+        type: choice
+        options:
+          - standar
+          - legacy
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Bersihkan Ruang Disk Server
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h
+
+      - name: Instal Dependensi Build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential ccache curl flex git libncurses-dev libssl-dev libelf-dev python3 zip unzip zstd wget tar
+
+      - name: Unduh Source SouthWest-NG v0.21.0
+        run: |
+          GH="https://""github.com"
+          git clone "$GH/pix106/android_kernel_xiaomi_sdm660_southwest-ng" kernel
+          cd kernel
+          COMMIT_HASH=$(git log --grep="0.21" -n 1 --format="%H")
+          if [ -n "$COMMIT_HASH" ]; then
+            git checkout $COMMIT_HASH
+          else
+            TAG_NAME=$(git tag -l "*0.21*" | head -n 1)
+            [ -n "$TAG_NAME" ] && git checkout $TAG_NAME
+          fi
+          git log -n 1 --oneline
+
+      - name: Integrasi KernelSU-Next
+        run: |
+          cd kernel
+          RAW="https://raw.githubusercontent.com"
+
+          curl -LSs "$RAW/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
+
+      - name: Unduh Clang & AnyKernel3
+        run: |
+          GH="https://""github.com"
+          mkdir -p clang && cd clang
+          wget -q "$GH/ZyCromerZ/Clang/releases/download/19.0.0git-20240812-release/Clang-19.0.0git-20240812.tar.gz" -O clang.tar.gz
+          tar -xzf clang.tar.gz && rm clang.tar.gz
+          cd ..
+          git clone --depth=1 "$GH/osm0sis/AnyKernel3" AnyKernel3
+          sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
+          sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
+          sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
+
+      - name: Konfigurasi & Kompilasi Kernel
+        run: |
+          export PATH="$PWD/clang/bin:$PATH"
+          export ARCH=arm64
+          export SUBARCH=arm64
+          cd kernel
+
+          if [ -f "arch/arm64/configs/vendor/xiaomi/lavender.config" ]; then
+            if [ "${{ github.event.inputs.variant }}" == "legacy" ]; then
+              make O=out ARCH=arm64 vendor/sdm660-perf_defconfig vendor/xiaomi/lavender.config
+            else
+              DYN_CFG=$(ls arch/arm64/configs/vendor/xiaomi/*dyn* arch/arm64/configs/vendor/xiaomi/*retro* 2>/dev/null | head -n 1 | sed 's|arch/arm64/configs/||')
+              make O=out ARCH=arm64 vendor/sdm660-perf_defconfig vendor/xiaomi/lavender.config $DYN_CFG
+            fi
+          else
+            DEF_CFG=$(find arch/arm64/configs -name "*lavender*defconfig" | head -n 1 | sed 's|arch/arm64/configs/||')
+            make O=out ARCH=arm64 $DEF_CFG
+          fi
+
+          scripts/config --file out/.config -e KSU -e KPROBES -e KPROBE_EVENTS -e KSU_KPROBE_HOOKS
+          make O=out ARCH=arm64 olddefconfig
+
+          make -j$(nproc --all) O=out \
+            ARCH=arm64 \
+            CC=clang \
+            LLVM=1 \
+            LLVM_IAS=1 \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+
+      - name: Kemas ke File ZIP (AnyKernel3)
+        run: |
+          cp kernel/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+          [ -f kernel/out/arch/arm64/boot/dtbo.img ] && cp kernel/out/arch/arm64/boot/dtbo.img AnyKernel3/
+          cd AnyKernel3
+          zip -r9 ../lavender-SouthWest-NG-0.21.0-KSUN-${{ github.event.inputs.variant }}.zip * -x .git README.md *placeholder
+
+      - name: Upload Hasil Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: lavender-SouthWest-NG-0.21.0-KSUN-${{ github.event.inputs.variant }}
+          path: lavender-SouthWest-NG-0.21.0-KSUN-${{ github.event.inputs.variant }}.zip
