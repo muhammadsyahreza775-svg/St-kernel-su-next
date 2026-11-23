@@ -49,10 +49,11 @@ jobs:
       - name: Unduh Clang & AnyKernel3
         run: |
           GH="https://""github.com"
-          RAW="https://""://githubusercontent.com"
-          mkdir -p clang && cd clang
-          bash <(curl -s "$RAW/Neutron-Toolchains/antman/main/antman") -S
-          cd ..
+          AOSP="https://""://googlesource.com"
+          mkdir -p clang
+          wget -q "$AOSP/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r487747c.tar.gz" -O clang.tar.gz
+          tar -xzf clang.tar.gz -C clang && rm clang.tar.gz
+          ls -la clang/bin/ld.lld
           git clone --depth=1 "$GH/osm0sis/AnyKernel3" AnyKernel3
           sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
           sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
@@ -60,7 +61,8 @@ jobs:
 
       - name: Konfigurasi & Kompilasi Kernel
         run: |
-          export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
+          CLANG_BIN=$(dirname $(find "$GITHUB_WORKSPACE/clang" -name "ld.lld" | head -n 1))
+          export PATH="$CLANG_BIN:$PATH"
           export ARCH=arm64
           export SUBARCH=arm64
           cd kernel
@@ -83,6 +85,7 @@ jobs:
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
+            LD=ld.lld \
             LLVM=1 \
             LLVM_IAS=1 \
             CLANG_TRIPLE=aarch64-linux-gnu- \
