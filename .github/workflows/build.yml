@@ -56,7 +56,7 @@ jobs:
           
       - name: Fix unknown warning option in Makefile
         run: |
-           sed -i 's/-Wno-cast-function-type-strict//g' Makefile
+         sed -i 's/-Wno-cast-function-type-strict//g' kernel/Makefile
 
       - name: Konfigurasi & Kompilasi Kernel
         run: |
