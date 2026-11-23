@@ -24,7 +24,7 @@ jobs:
       - name: Instal Dependensi Build
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential ccache curl flex git libncurses-dev libssl-dev libelf-dev python3 zip unzip zstd wget tar
+          sudo apt-get install -y bc bison build-essential ccache curl flex git libncurses-dev libssl-dev libelf-dev python3 zip unzip zstd wget tar clang lld llvm
 
       - name: Unduh Source SouthWest-NG v0.21.0
         run: |
@@ -43,17 +43,12 @@ jobs:
       - name: Integrasi KernelSU-Next
         run: |
           cd kernel
-          RAW="https://""://githubusercontent.com"
+          RAW="https://raw.githubusercontent.com"
           curl -LSs "$RAW/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
 
-      - name: Unduh Clang & AnyKernel3
+      - name: Unduh AnyKernel3
         run: |
           GH="https://""github.com"
-          AOSP="https://""://googlesource.com"
-          mkdir -p clang
-          wget -q "$AOSP/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r487747c.tar.gz" -O clang.tar.gz
-          tar -xzf clang.tar.gz -C clang && rm clang.tar.gz
-          ls -la clang/bin/ld.lld
           git clone --depth=1 "$GH/osm0sis/AnyKernel3" AnyKernel3
           sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
           sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
@@ -61,8 +56,6 @@ jobs:
 
       - name: Konfigurasi & Kompilasi Kernel
         run: |
-          CLANG_BIN=$(dirname $(find "$GITHUB_WORKSPACE/clang" -name "ld.lld" | head -n 1))
-          export PATH="$CLANG_BIN:$PATH"
           export ARCH=arm64
           export SUBARCH=arm64
           cd kernel
@@ -104,3 +97,4 @@ jobs:
         with:
           name: lavender-SouthWest-NG-0.21.0-KSUN-${{ github.event.inputs.variant }}
           path: lavender-SouthWest-NG-0.21.0-KSUN-${{ github.event.inputs.variant }}.zip
+          
