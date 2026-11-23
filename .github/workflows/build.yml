@@ -73,9 +73,10 @@ jobs:
           fi
 
           scripts/config --file out/.config -e KSU -e KPROBES -e KPROBE_EVENTS -e KSU_KPROBE_HOOKS
-          make O=out ARCH=arm64 olddefconfig
+          scripts/config --file out/.config --set-str LITTLE_CPU_MASK "0x0f" --set-str BIG_CPU_MASK "0xf0"
+          yes "" | make O=out ARCH=arm64 olddefconfig
 
-          make -j$(nproc --all) O=out \
+          yes "" | make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
             LD=ld.lld \
@@ -97,4 +98,3 @@ jobs:
         with:
           name: lavender-SouthWest-NG-0.21.0-KSUN-${{ github.event.inputs.variant }}
           path: lavender-SouthWest-NG-0.21.0-KSUN-${{ github.event.inputs.variant }}.zip
-          
