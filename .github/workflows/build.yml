@@ -73,11 +73,14 @@ jobs:
           fi
 
           scripts/config --file out/.config -e KSU -e KPROBES -e KPROBE_EVENTS -e KSU_KPROBE_HOOKS
-          echo "CONFIG_LITTLE_CPU_MASK=0x0f" >> out/.config
-          echo "CONFIG_BIG_CPU_MASK=0xf0" >> out/.config
-          make O=out ARCH=arm64 olddefconfig < /dev/null
+          sed -i 's/.*CONFIG_LITTLE_CPU_MASK.*/CONFIG_LITTLE_CPU_MASK=0x0f/' out/.config
+          sed -i 's/.*CONFIG_BIG_CPU_MASK.*/CONFIG_BIG_CPU_MASK=0xf0/' out/.config
+          grep -q "CONFIG_LITTLE_CPU_MASK=" out/.config || echo "CONFIG_LITTLE_CPU_MASK=0x0f" >> out/.config
+          grep -q "CONFIG_BIG_CPU_MASK=" out/.config || echo "CONFIG_BIG_CPU_MASK=0xf0" >> out/.config
 
-          make -j$(nproc --all) O=out \
+          printf '0x0f\n0xf0\n\n\n\n\n\n\n\n\n' | make O=out ARCH=arm64 oldconfig
+
+          printf '0x0f\n0xf0\n\n\n\n\n\n\n\n\n' | make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
             LD=ld.lld \
@@ -85,9 +88,8 @@ jobs:
             LLVM_IAS=1 \
             CLANG_TRIPLE=aarch64-linux-gnu- \
             CROSS_COMPILE=aarch64-linux-gnu- \
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi- < /dev/null
-
-
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+            
       - name: Kemas ke File ZIP (AnyKernel3)
         run: |
           cp kernel/out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
