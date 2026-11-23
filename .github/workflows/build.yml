@@ -58,13 +58,12 @@ jobs:
           sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
           sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
 
-       - name: Konfigurasi & Kompilasi Kernel
+      - name: Konfigurasi & Kompilasi Kernel
         run: |
           export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
           export ARCH=arm64
           export SUBARCH=arm64
           cd kernel
-
 
           if [ -f "arch/arm64/configs/vendor/xiaomi/lavender.config" ]; then
             if [ "${{ github.event.inputs.variant }}" == "legacy" ]; then
