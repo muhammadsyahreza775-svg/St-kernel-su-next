@@ -43,11 +43,10 @@ jobs:
       - name: Integrasi KernelSU-Next
         run: |
           cd kernel
-          RAW="https://raw.githubusercontent.com"
-
+          RAW="https://""://githubusercontent.com"
           curl -LSs "$RAW/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
 
-            - name: Unduh Clang & AnyKernel3
+      - name: Unduh Clang & AnyKernel3
         run: |
           GH="https://""github.com"
           RAW="https://""://githubusercontent.com"
@@ -58,7 +57,6 @@ jobs:
           sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
           sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
           sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
-
 
       - name: Konfigurasi & Kompilasi Kernel
         run: |
