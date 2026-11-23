@@ -47,17 +47,18 @@ jobs:
 
           curl -LSs "$RAW/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
 
-      - name: Unduh Clang & AnyKernel3
+            - name: Unduh Clang & AnyKernel3
         run: |
           GH="https://""github.com"
+          RAW="https://""://githubusercontent.com"
           mkdir -p clang && cd clang
-          wget -q "$GH/ZyCromerZ/Clang/releases/download/19.0.0git-20240812-release/Clang-19.0.0git-20240812.tar.gz" -O clang.tar.gz
-          tar -xzf clang.tar.gz && rm clang.tar.gz
+          bash <(curl -s "$RAW/Neutron-Toolchains/antman/main/antman") -S
           cd ..
           git clone --depth=1 "$GH/osm0sis/AnyKernel3" AnyKernel3
           sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
           sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
           sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
+
 
       - name: Konfigurasi & Kompilasi Kernel
         run: |
