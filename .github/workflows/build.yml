@@ -73,10 +73,11 @@ jobs:
           fi
 
           scripts/config --file out/.config -e KSU -e KPROBES -e KPROBE_EVENTS -e KSU_KPROBE_HOOKS
-          scripts/config --file out/.config --set-str LITTLE_CPU_MASK "0x0f" --set-str BIG_CPU_MASK "0xf0"
-          yes "" | make O=out ARCH=arm64 olddefconfig
+          echo "CONFIG_LITTLE_CPU_MASK=0x0f" >> out/.config
+          echo "CONFIG_BIG_CPU_MASK=0xf0" >> out/.config
+          make O=out ARCH=arm64 olddefconfig < /dev/null
 
-          yes "" | make -j$(nproc --all) O=out \
+          make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
             LD=ld.lld \
@@ -84,7 +85,8 @@ jobs:
             LLVM_IAS=1 \
             CLANG_TRIPLE=aarch64-linux-gnu- \
             CROSS_COMPILE=aarch64-linux-gnu- \
-            CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- < /dev/null
+
 
       - name: Kemas ke File ZIP (AnyKernel3)
         run: |
