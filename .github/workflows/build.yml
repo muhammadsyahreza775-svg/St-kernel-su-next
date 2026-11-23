@@ -60,17 +60,28 @@ jobs:
           export SUBARCH=arm64
           cd kernel
 
+          # Cek jika ada skrip build.sh bawaan repo, atau gabungkan semua fragmen lavender/sdm660
+          ls -la arch/arm64/configs/vendor/xiaomi/ || true
+
           if [ -f "arch/arm64/configs/vendor/xiaomi/lavender.config" ]; then
+            COMMON_CFG=""
+            [ -f "arch/arm64/configs/vendor/xiaomi/sdm660.config" ] && COMMON_CFG="vendor/xiaomi/sdm660.config"
             if [ "${{ github.event.inputs.variant }}" == "legacy" ]; then
-              make O=out ARCH=arm64 vendor/sdm660-perf_defconfig vendor/xiaomi/lavender.config
+              make O=out ARCH=arm64 vendor/sdm660-perf_defconfig $COMMON_CFG vendor/xiaomi/lavender.config
             else
               DYN_CFG=$(ls arch/arm64/configs/vendor/xiaomi/*dyn* arch/arm64/configs/vendor/xiaomi/*retro* 2>/dev/null | head -n 1 | sed 's|arch/arm64/configs/||')
-              make O=out ARCH=arm64 vendor/sdm660-perf_defconfig vendor/xiaomi/lavender.config $DYN_CFG
+              make O=out ARCH=arm64 vendor/sdm660-perf_defconfig $COMMON_CFG vendor/xiaomi/lavender.config $DYN_CFG
             fi
           else
             DEF_CFG=$(find arch/arm64/configs -name "*lavender*defconfig" | head -n 1 | sed 's|arch/arm64/configs/||')
             make O=out ARCH=arm64 $DEF_CFG
           fi
+
+          # Paksa nilai CPU mask di Kconfig agar tidak pernah ditanyakan lagi
+          sed -i 's/config LITTLE_CPU_MASK/config LITTLE_CPU_MASK\n\tdefault "0x0f"/' init/Kconfig arch/arm64/Kconfig kernel/sched/Kconfig 2>/dev/null || true
+          sed -i 's/config BIG_CPU_MASK/config BIG_CPU_MASK\n\tdefault "0xf0"/' init/Kconfig arch/arm64/Kconfig kernel/sched/Kconfig 2>/dev/null || true
+          grep -rn "config LITTLE_CPU_MASK" . | cut -d: -f1 | xargs -r sed -i '/config LITTLE_CPU_MASK/a \        default 0x0f'
+          grep -rn "config BIG_CPU_MASK" . | cut -d: -f1 | xargs -r sed -i '/config BIG_CPU_MASK/a \        default 0xf0'
 
           scripts/config --file out/.config -e KSU -e KPROBES -e KPROBE_EVENTS -e KSU_KPROBE_HOOKS
           sed -i 's/.*CONFIG_LITTLE_CPU_MASK.*/CONFIG_LITTLE_CPU_MASK=0x0f/' out/.config
@@ -78,9 +89,9 @@ jobs:
           grep -q "CONFIG_LITTLE_CPU_MASK=" out/.config || echo "CONFIG_LITTLE_CPU_MASK=0x0f" >> out/.config
           grep -q "CONFIG_BIG_CPU_MASK=" out/.config || echo "CONFIG_BIG_CPU_MASK=0xf0" >> out/.config
 
-          printf '0x0f\n0xf0\n\n\n\n\n\n\n\n\n' | make O=out ARCH=arm64 oldconfig
+          make O=out ARCH=arm64 olddefconfig
 
-          printf '0x0f\n0xf0\n\n\n\n\n\n\n\n\n' | make -j$(nproc --all) O=out \
+          make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
             LD=ld.lld \
@@ -89,6 +100,7 @@ jobs:
             CLANG_TRIPLE=aarch64-linux-gnu- \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi-
+
             
       - name: Kemas ke File ZIP (AnyKernel3)
         run: |
