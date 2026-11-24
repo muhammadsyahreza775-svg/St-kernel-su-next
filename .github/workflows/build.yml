@@ -37,16 +37,18 @@ jobs:
 
       - name: Unduh Source SouthWest-NG v0.21.0
         run: |
-          git clone https://github.com kernel
+          GH="https://""github.com"
+          git clone "$GH/pix106/android_kernel_xiaomi_sdm660_southwest-ng" kernel
           cd kernel
           COMMIT_HASH=$(git log --grep="0.21" -n 1 --format="%H")
           if [ -n "$COMMIT_HASH" ]; then
-            git checkout $COMMIT_HASH
+          git checkout $COMMIT_HASH
           else
-            TAG_NAME=$(git tag -l "*0.21*" | head -n 1)
-            [ -n "$TAG_NAME" ] && git checkout $TAG_NAME
+          TAG_NAME=$(git tag -l "*0.21*" | head -n 1)
+          [ -n "$TAG_NAME" ] && git checkout $TAG_NAME
           fi
           git log -n 1 --oneline
+
 
       - name: Integrasi KernelSU-Next
         run: |
