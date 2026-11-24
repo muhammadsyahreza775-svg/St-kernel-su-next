@@ -30,8 +30,9 @@ jobs:
 
       - name: Unduh Clang Toolchain
         run: |
-          git clone --depth=1 https://github.com clang
-          
+          GH="https://""github.com"
+          git clone --depth=1 "$GH/kdrag0n/proton-clang.git" clang
+
 
 
 
