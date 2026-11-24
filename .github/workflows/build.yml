@@ -28,13 +28,10 @@ jobs:
             libncurses-dev libssl-dev libelf-dev python3 python-is-python3 \
             zip unzip zstd wget tar gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
-      - name: Unduh ZyC Clang Toolchain
+      - name: Unduh Neutron Clang Toolchain
         run: |
           mkdir -p clang && cd clang
-          CLANG_URL=$(curl -sL https://githubusercontent.com | head -n 1 | tr -d '\r')
-          echo "Downloading: $CLANG_URL"
-          wget -q "$CLANG_URL" -O clang_archive
-          tar -xf clang_archive && rm -f clang_archive
+          bash <(curl -s "https://githubusercontent.com") -S
 
 
 
