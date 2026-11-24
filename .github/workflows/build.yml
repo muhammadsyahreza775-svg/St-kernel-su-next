@@ -91,16 +91,9 @@ jobs:
             make O=out ARCH=arm64 $DEF_CFG
           fi
 
-          cat << 'EOF' > out/extra.config
-          CONFIG_LITTLE_CPU_MASK=0x0f
-          CONFIG_BIG_CPU_MASK=0xf0
-          CONFIG_COMPAT_VDSO=n
-          EOF
-
-          KCONFIG_ALLCONFIG=out/extra.config make O=out ARCH=arm64 alldefconfig
-          scripts/config --file out/.config -e KSU -e KPROBES -e KPROBE_EVENTS -e KSU_KPROBE_HOOKS -d COMPAT_VDSO
+           scripts/config --file out/.config -e KSU -e KPROBES -e KPROBE_EVENTS -e KSU_KPROBE_HOOKS -d COMPAT_VDSO
           make O=out ARCH=arm64 olddefconfig
-
+          
           make -j$(nproc --all) O=out \
             ARCH=arm64 \
             CC=clang \
