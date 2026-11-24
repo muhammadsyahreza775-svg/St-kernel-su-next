@@ -30,7 +30,8 @@ jobs:
 
       - name: Unduh Clang Toolchain
         run: |
-          git clone --depth=1 https://gitlab.com clang
+          git clone --depth=1 https://github.com clang
+          
 
 
 
