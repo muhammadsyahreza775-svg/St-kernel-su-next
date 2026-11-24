@@ -28,10 +28,9 @@ jobs:
             libncurses-dev libssl-dev libelf-dev python3 python-is-python3 \
             zip unzip zstd wget tar gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
-      - name: Unduh Neutron Clang Toolchain
+      - name: Unduh Clang Toolchain
         run: |
-          mkdir -p clang && cd clang
-          bash <(curl -s "https://githubusercontent.com") -S
+          git clone --depth=1 https://gitlab.com clang
 
 
 
@@ -91,8 +90,8 @@ jobs:
           fi
 
           cat << 'EOF' > out/extra.config
-          CONFIG_LITTLE_CPU_MASK=15
-          CONFIG_BIG_CPU_MASK=240
+          CONFIG_LITTLE_CPU_MASK=0x0f
+          CONFIG_BIG_CPU_MASK=0xf0
           CONFIG_COMPAT_VDSO=n
           EOF
 
